@@ -166,23 +166,23 @@ def innerconnect_s(S, k, l):
                 term2 = mul_polar(mul_polar(S.at[h, i, l], S.at[h, k, k]), S.at[h, l, j])
                 term3 = mul_polar(
                     mul_polar(S.at[h, i, k], S.at[h, l, j]),
-                    add_polar((1, 0), (-S[h, k, l, 0], S[h, k, l, 1])),
+                    add_polar((1, 0), (-S.at[h, k, l, 0], S.at[h, k, l, 1])),
                 )
-                term4 = mul_polar(mul_polar(S[h, i, k], S[h, l, l]), S[h, k, j])
+                term4 = mul_polar(mul_polar(S.at[h, i, k], S.at[h, l, l]), S.at[h, k, j])
                 term5 = mul_polar(
-                    add_polar((1, 0), (-S[h, k, l, 0], S[h, k, l, 1])),
-                    add_polar((1, 0), (-S[h, l, k, 0], S[h, l, k, 1])),
+                    add_polar((1, 0), (-S.at[h, k, l, 0], S.at[h, k, l, 1])),
+                    add_polar((1, 0), (-S.at[h, l, k, 0], S.at[h, l, k, 1])),
                 )
-                term6 = mul_polar(S[h, k, k], S[h, l, l])
+                term6 = mul_polar(S.at[h, k, k], S.at[h, l, l])
                 term7 = add_polar(add_polar(add_polar(term1, term2), term3), term4)
                 term8 = add_polar(term5, (-term6[0], term6[1]))
                 term9 = (term7[0] / term8[0], term7[1] - term8[1])
 # PROBLEM
-                C[h, i, j] = add_polar(S[h, i, j], term9)
+                C.at[h, i, j].set(add_polar(S.at[h, i, j], term9))
 
     # remove ports that were `connected`
-# PROBLEM
-    C = np.delete(C, (k, l), 1)
-    C = np.delete(C, (k, l), 2)
+# PROBLEM-- need intermediate matrices (or more elegant solution)
+    C = jnp.delete(C, (k, l), 1)
+    C = jnp.delete(C, (k, l), 2)
 
     return C
