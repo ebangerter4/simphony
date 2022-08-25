@@ -5,31 +5,22 @@
 """
 simphony.connect
 ================
-
 Code for s-parameter matrix cascading uses the scikit-rf implementation. Per
 their software license, the copyright notice is reproduced below:
-
-
 Copyright (c) 2010, Alexander Arsenovic
 All rights reserved.
-
 Copyright (c) 2017, scikit-rf Developers
 All rights reserved.
-
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
-
 * Redistributions of source code must retain the above copyright notice, this
   list of conditions and the following disclaimer.
-
 * Redistributions in binary form must reproduce the above copyright notice, this
   list of conditions and the following disclaimer in the documentation and/or
   other materials provided with the distribution.
-
 * Neither the name of the scikit-rf nor the names of its
   contributors may be used to endorse or promote products derived from
   this software without specific prior written permission.
-
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -43,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import numpy as np
-import jax.numpy as jnp
 
 from simphony.tools import add_polar, mul_polar
 
@@ -87,7 +77,7 @@ def connect_s(A, k, B, l):
     C = create_block_diagonal(A, B)
     nA = A.shape[1]  # num ports on A
 
-    # call innerconnect_s() on composite matrix C
+    # call innerconnect_s() on composit matrix C
     return innerconnect_s(C, k, nA + l)
 
 
@@ -100,22 +90,18 @@ def create_block_diagonal(A, B):
     nC = nA + nB  # num ports on C
 
     # if complex values are in rectangular, convert to polar
-# PROBLEM-- could just make it so that it uses a new intermediate matrix and if-else branch to assign
     if A.ndim == 3:
-        #Stacks it so that the magnitude and angle are aligned on the last axis
-        A_stack = jnp.stack((jnp.abs(A), jnp.angle(A)), axis=-1)
-    else: A_stack = A
+        A = np.stack((np.abs(A), np.angle(A)), axis=-1)
 
     if B.ndim == 3:
-        B_stack = jnp.stack((jnp.abs(B), jnp.angle(B)), axis=-1)
-    else: B_stack = B
-# PROBLEM-- more intermediate steps that involve copying lots of matrices?
-    # create composite matrix, appending each sub-matrix diagonally
-    C = jnp.zeros((nf, nC, nC, 2))
-    C0 = C.at[:, :nA, :nA].set(A_stack.copy())
-    C1 = C0.at[:, nA:, nA:].set(B_stack.copy())
+        B = np.stack((np.abs(B), np.angle(B)), axis=-1)
 
-    return C1
+    # create composite matrix, appending each sub-matrix diagonally
+    C = np.zeros((nf, nC, nC, 2))
+    C[:, :nA, :nA] = A.copy()
+    C[:, nA:, nA:] = B.copy()
+
+    return C
 
 
 def innerconnect_s(S, k, l):
@@ -153,19 +139,19 @@ def innerconnect_s(S, k, l):
 
     nS = S.shape[1]  # num of ports on input s-matrix
     # create an empty s-matrix, to store the result
-    C = jnp.zeros(S.shape)
+    C = np.zeros(S.shape)
 
     # loop through ports and calulates resultant s-parameters
     for h in range(S.shape[0]):
         for i in range(nS):
             for j in range(nS):
                 term1 = mul_polar(
-                    mul_polar(S.at[h, i, l], S.at[h, k, j]),
-                    add_polar((1, 0), (-S.at[h, l, k, 0], S.at[h, l, k, 1])),
+                    mul_polar(S[h, i, l], S[h, k, j]),
+                    add_polar((1, 0), (-S[h, l, k, 0], S[h, l, k, 1])),
                 )
-                term2 = mul_polar(mul_polar(S.at[h, i, l], S.at[h, k, k]), S.at[h, l, j])
+                term2 = mul_polar(mul_polar(S[h, i, l], S[h, k, k]), S[h, l, j])
                 term3 = mul_polar(
-                    mul_polar(S.at[h, i, k], S.at[h, l, j]),
+                    mul_polar(S[h, i, k], S[h, l, j]),
                     add_polar((1, 0), (-S[h, k, l, 0], S[h, k, l, 1])),
                 )
                 term4 = mul_polar(mul_polar(S[h, i, k], S[h, l, l]), S[h, k, j])
@@ -177,11 +163,9 @@ def innerconnect_s(S, k, l):
                 term7 = add_polar(add_polar(add_polar(term1, term2), term3), term4)
                 term8 = add_polar(term5, (-term6[0], term6[1]))
                 term9 = (term7[0] / term8[0], term7[1] - term8[1])
-# PROBLEM
                 C[h, i, j] = add_polar(S[h, i, j], term9)
 
     # remove ports that were `connected`
-# PROBLEM
     C = np.delete(C, (k, l), 1)
     C = np.delete(C, (k, l), 2)
 
