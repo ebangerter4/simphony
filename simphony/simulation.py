@@ -149,6 +149,7 @@ class Simulation:
             end = start + repeat + 1 + (1 if i < remainder else 0)
 
             # put the values into the expanded array
+# PROBLEM- changing values in the array expanded
             expanded[start:end] = value
 
         return expanded
@@ -232,6 +233,7 @@ class Simulation:
                     # is for backwards compatibility with siepic library. once that gets
                     # updated, we can remove this, although it will be a breaking change
                     if np.shape(scattering[0]) != (2,):
+# PROBLEM- is column_stack supported by jnp? Changing matrix scattering
                         scattering = np.column_stack(
                             (np.abs(scattering), np.angle(scattering))
                         )
@@ -247,6 +249,7 @@ class Simulation:
                             ),
                             axis=-1,
                         )
+# MANY PROBLEMS
                         contributions = contributions[:, :, np.newaxis] + np.zeros(
                             (self.num_samples, 2)
                         )
@@ -287,7 +290,7 @@ class Simulation:
                                         ),
                                         axis=-1,
                                     )
-
+# PROBLEM-- not again
                     # add all of the different source contributions together
                     for i in range(self.shape[0]):
                         for j in range(self.shape[1]):
@@ -652,7 +655,7 @@ class Detector(SimulationModel):
                         # so the same noise is injected in all the signals
                         rin = source.get_rin(self._get_bandwidth()[0])
                         dist = source.get_rin_dist(i, j)
-
+# PROBLEM- updating array index
                         for k in range(self.context.num_samples):
                             if power[i][j][k] > 0:
                                 noise[k] = (
@@ -840,7 +843,7 @@ class DifferentialDetector(Detector):
                                     from_db(p2db + monitor_rin) * dist[k]
                                 )
                                 rf_noise2[k] = from_db(p2db + rf_rin + cmrr) * dist[k]
-
+# PROBLEM- updating array at specific place
                     # store the RIN noise for later use
                     self.monitor_rin_dists1[i][j] = monitor_noise1
                     self.monitor_rin_dists2[i][j] = monitor_noise2

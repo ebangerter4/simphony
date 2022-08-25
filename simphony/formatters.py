@@ -230,7 +230,8 @@ class CircuitJSONFormatter:
                 component, SimulationModel
             ):
                 continue
-
+# PROBLEM- is data a dict... does this affect anything?
+# .append for dictionaries-- should be ok
             # get a representation for each component
             data["components"].append(
                 component.to_string(freqs, formatter=ModelJSONFormatter())

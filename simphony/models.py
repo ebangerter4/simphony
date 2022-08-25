@@ -615,7 +615,8 @@ class Subcircuit(Model):
                 # from available_pins so the indices always line up
                 k = available_pins.index(pin)
                 l = available_pins.index(pin._connection)
-
+# PROBLEM- changing s_block, may have to create another one
+# which is problematic because this is what we are returning
                 s_block = innerconnect_s(s_block, k, l)
 
                 available_pins.remove(pin)
